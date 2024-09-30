@@ -63,3 +63,11 @@ resource "aws_subnet" "terraform-subnet-3" {
 output "terraform-vpc-id" {
   value = aws_vpc.terraform-vpc.id
 }
+
+resource "aws_internet_gateway" "terraform-igw" {
+  vpc_id = aws_vpc.terraform-vpc.id
+
+  tags = {
+    Name = "${var.tag["Name"]}-igw"
+  }
+}

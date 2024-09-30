@@ -11,6 +11,21 @@ provider "aws" {
     region = "us-east-1"
   # Configuration options
 }
-resource "aws_vpc" "terraform-vpc" {
-  cidr_block = "10.0.0.0/16"
+
+variable "vpc_cidr_block" {
+    type = string
 }
+
+variable "tag" {
+    type = map(string)
+}
+
+resource "aws_vpc" "terraform-vpc" {
+  cidr_block = var.vpc_cidr_block
+
+  tags = var.tag
+}
+
+
+    
+    

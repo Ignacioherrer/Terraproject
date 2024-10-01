@@ -32,6 +32,8 @@ variable "subnet_cidr_block_2" {
 variable "subnet_cidr_block_3" {
   type = string
 }
+variable image_name {}
+variable instance_type {}
 
 resource "aws_vpc" "terraform-vpc" {
   cidr_block = var.vpc_cidr_block
@@ -105,5 +107,32 @@ resource "aws_security_group" "allow_tls" {
 
   tags = {
     Name = "allow_tls"
+  }
+}
+
+data "aws_ami" "latest-amazon-linux-image" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = [var.image_name]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["amazon"] # Canonical
+}
+
+resource "aws_instance" "web" {
+  ami           = data.aws_ami.latest-amazon-linux-image.id
+  instance_type = var.instance_type
+  subnet_id = aws_subnet.terraform-subnet-1.id
+  vpc_security_group_ids = [aws_security_group.allow_tls.id]
+  associate_public_ip_address = true
+  tags = {
+    Name = "HelloWorld"
   }
 }

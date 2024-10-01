@@ -132,7 +132,8 @@ resource "aws_instance" "web" {
   subnet_id = aws_subnet.terraform-subnet-1.id
   vpc_security_group_ids = [aws_security_group.allow_tls.id]
   associate_public_ip_address = true
+  user_data = file("user_data.sh")
   tags = {
-    Name = "HelloWorld"
+    Name = "${var.tag["Name"]}-server"
   }
 }

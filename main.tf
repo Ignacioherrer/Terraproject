@@ -32,8 +32,8 @@ variable "subnet_cidr_block_2" {
 variable "subnet_cidr_block_3" {
   type = string
 }
-variable image_name {}
-variable instance_type {}
+variable "image_name" {}
+variable "instance_type" {}
 
 resource "aws_vpc" "terraform-vpc" {
   cidr_block = var.vpc_cidr_block
@@ -45,7 +45,7 @@ resource "aws_subnet" "terraform-subnet-1" {
   vpc_id     = aws_vpc.terraform-vpc.id
   cidr_block = var.subnet_cidr_block_1
   tags       = var.tag
-  }
+}
 
 resource "aws_subnet" "terraform-subnet-2" {
   vpc_id     = aws_vpc.terraform-vpc.id
@@ -72,11 +72,9 @@ resource "aws_route_table" "terraform-vpc-rt" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.terraform-igw.id
   }
-
-  
   tags = {
     Name = "${var.tag["Name"]}-rt"
-  }  
+  }
 }
 resource "aws_route_table_association" "a-rtb-subnet" {
   subnet_id      = aws_subnet.terraform-subnet-1.id
@@ -84,8 +82,8 @@ resource "aws_route_table_association" "a-rtb-subnet" {
 }
 
 resource "aws_security_group" "allow_tls" {
-  name        = "${var.tag["Name"]}-sg"
-  vpc_id      = aws_vpc.terraform-vpc.id
+  name   = "${var.tag["Name"]}-sg"
+  vpc_id = aws_vpc.terraform-vpc.id
   egress {
     from_port   = 0
     to_port     = 0
@@ -127,13 +125,16 @@ data "aws_ami" "latest-amazon-linux-image" {
 }
 
 resource "aws_instance" "web" {
-  ami           = data.aws_ami.latest-amazon-linux-image.id
-  instance_type = var.instance_type
-  subnet_id = aws_subnet.terraform-subnet-1.id
-  vpc_security_group_ids = [aws_security_group.allow_tls.id]
+  ami                         = data.aws_ami.latest-amazon-linux-image.id
+  instance_type               = var.instance_type
+  subnet_id                   = aws_subnet.terraform-subnet-1.id
+  vpc_security_group_ids      = [aws_security_group.allow_tls.id]
   associate_public_ip_address = true
-  user_data = file("user_data.sh")
+  user_data                   = file("user_data.sh")
   tags = {
     Name = "${var.tag["Name"]}-server"
   }
+}
+output "instance_public_ip" {
+  value = aws_instance.web.public_ip
 }

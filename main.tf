@@ -20,6 +20,7 @@ variable "tag" {
   type = map(string)
 }
 
+
 variable "subnet_cidr_block_1" {
   type = string
 }
@@ -42,21 +43,11 @@ resource "aws_subnet" "terraform-subnet-1" {
   vpc_id     = aws_vpc.terraform-vpc.id
   cidr_block = var.subnet_cidr_block_1
   tags       = var.tag
-}
+  }
 
 resource "aws_subnet" "terraform-subnet-2" {
   vpc_id     = aws_vpc.terraform-vpc.id
   cidr_block = var.subnet_cidr_block_2
-  tags       = var.tag
-}
-
-data "aws_vpc" "default_vpc" {
-  default = true
-}
-
-resource "aws_subnet" "terraform-subnet-3" {
-  vpc_id     = data.aws_vpc.default_vpc.id
-  cidr_block = var.subnet_cidr_block_3
   tags       = var.tag
 }
 
@@ -72,7 +63,7 @@ resource "aws_internet_gateway" "terraform-igw" {
   }
 }
 
-resource "aws_route_table" "r" {
+resource "aws_route_table" "terraform-vpc-rt" {
   vpc_id = aws_vpc.terraform-vpc.id
 
   route {
@@ -83,5 +74,36 @@ resource "aws_route_table" "r" {
   
   tags = {
     Name = "${var.tag["Name"]}-rt"
+  }  
+}
+resource "aws_route_table_association" "a-rtb-subnet" {
+  subnet_id      = aws_subnet.terraform-subnet-1.id
+  route_table_id = aws_route_table.terraform-vpc-rt.id
+}
+
+resource "aws_security_group" "allow_tls" {
+  name        = "${var.tag["Name"]}-sg"
+  vpc_id      = aws_vpc.terraform-vpc.id
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "allow_tls"
   }
 }
